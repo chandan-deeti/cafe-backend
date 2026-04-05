@@ -1,0 +1,29 @@
+package com.cafe.repository;
+
+import com.cafe.entity.Order;
+import com.cafe.entity.OrderStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
+    Optional<Order> findByOrderNumber(String orderNumber);
+    List<Order> findAllByOrderByCreatedAtDesc();
+
+    @Query("SELECT o FROM Order o WHERE o.createdAt BETWEEN :start AND :end ORDER BY o.createdAt DESC")
+    List<Order> findByDateRange(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.status != 'CANCELLED' AND o.createdAt BETWEEN :start AND :end")
+    BigDecimal sumRevenueByDateRange(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.createdAt BETWEEN :start AND :end AND o.status != 'CANCELLED'")
+    Long countOrdersByDateRange(LocalDateTime start, LocalDateTime end);
+}
